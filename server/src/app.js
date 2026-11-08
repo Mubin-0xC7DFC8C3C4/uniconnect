@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const metaRoutes = require('./routes/meta.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -17,7 +18,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/meta', metaRoutes);
-
+app.use('/api/auth', authRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
