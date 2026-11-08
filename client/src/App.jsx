@@ -1,7 +1,12 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import StudentDashboard from './pages/StudentDashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
   return (
@@ -9,6 +14,11 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/student" element={<ProtectedRoute role="student"><StudentDashboard /></ProtectedRoute>} />
+      <Route path="/teacher" element={<ProtectedRoute role="teacher"><TeacherDashboard /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute role="super_admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

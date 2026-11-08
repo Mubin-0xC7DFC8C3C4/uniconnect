@@ -12,7 +12,8 @@ export async function api(path, { method = 'GET', body, formData, token } = {}) 
 
   let payload;
   if (formData) {
-    payload = formData; 
+    payload = formData;
+  } else if (body) {
     headers['Content-Type'] = 'application/json';
     payload = JSON.stringify(body);
   }
@@ -21,17 +22,21 @@ export async function api(path, { method = 'GET', body, formData, token } = {}) 
   try {
     response = await fetch(`/api${path}`, { method, headers, body: payload });
   } catch (err) {
-    throw new ApiError('Cannot reach the server. Check your internet connection.', 0);
+    throw new Error('Cannot reach the server. Check your internet connection.');
   }
 
   let data = {};
   try {
     data = await response.json();
   } catch (err) {
+    
   }
 
   if (!response.ok) {
-    throw new ApiError(data.message || 'Something went wrong', response.status, data.errors || []);
+    const error = new Error(data.message || 'Something went wrong');
+    error.errors = data.errors || [];
+    error.status = response.status;
+    throw error;
   }
 
   return data;

@@ -140,7 +140,7 @@ router.post('/signup/start', upload.single('idCard'), async (req, res, next) => 
   }
 });
 
-router.post('/signup/complete', upload.none(), async (req, res, next) => {
+router.post('/signup/complete', async (req, res, next) => {
   const conn = await pool.getConnection();
   try {
     const email = text(req.body && req.body.email).toLowerCase();
@@ -320,7 +320,7 @@ router.post('/login', async (req, res, next) => {
 });
 
 // Forgot password
-router.post('/forgot-password', upload.none(), async (req, res, next) => {
+router.post('/forgot-password', async (req, res, next) => {
   try {
     const email = text(req.body && req.body.email).toLowerCase();
     if (!isEmail(email)) throw new HttpError(400, 'Enter a valid email address');
@@ -352,14 +352,14 @@ router.post('/forgot-password', upload.none(), async (req, res, next) => {
   }
 });
 
-router.post('/reset-password', upload.none(), async (req, res, next) => {
+router.post('/reset-password', async (req, res, next) => {
   try {
     const email = text(req.body && req.body.email).toLowerCase();
-    const otp = text(req.body && req.body.otp);
+    const code = text(req.body && (req.body.code || req.body.otp));
     const { newPassword, confirmPassword } = req.body || {};
 
-    if (!isEmail(email) || !/^\d{6}$/.test(otp)) {
-      throw new HttpError(400, 'Enter the 6-digit OTP from your email');
+    if (!isEmail(email) || !/^\d{6}$/.test(code)) {
+      throw new HttpError(400, 'Enter the 6-digit code from your email');
     }
 
     if (!isStrongPassword(newPassword)) {
@@ -378,13 +378,13 @@ router.post('/reset-password', upload.none(), async (req, res, next) => {
       [email]
     );
 
-    const invalid = new HttpError(400, 'The OTP is wrong or has expired');
+    const invalid = new HttpError(400, 'The code is wrong or has expired');
 
     if (rows.length === 0 || rows[0].attempts >= MAX_CODE_ATTEMPTS) {
       throw invalid;
     }
 
-    if (!(await checkCode(otp, rows[0].otp_hash))) {
+    if (!(await checkCode(code, rows[0].otp_hash))) {
       await pool.execute('UPDATE password_resets SET attempts = attempts + 1 WHERE user_id = ?', [rows[0].user_id]);
       throw invalid;
     }
