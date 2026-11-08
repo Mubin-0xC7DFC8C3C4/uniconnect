@@ -1,0 +1,17 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+
+const app = express();
+
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY));
+
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
+app.use(express.json({ limit: '100kb' }));
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+module.exports = app;
