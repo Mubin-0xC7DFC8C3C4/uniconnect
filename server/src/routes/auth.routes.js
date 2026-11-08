@@ -319,4 +319,91 @@ router.post('/login', upload.none(), async (req, res, next) => {
   }
 });
 
+// Forgot password
+router.post('/forgot-password', upload.none(), async (req, res, next) => {
+  try {
+    const email = text(req.body && req.body.email).toLowerCase();
+    if (!isEmail(email)) throw new HttpError(400, 'Enter a valid email address');
+    
+    const [users] = await pool.execute("SELECT user_id FROM users WHERE email = ? AND status = 'active'", [email]);
+
+    if (users.length > 0) {
+      const otp = generateCode();
+      const otpHash = await hashCode(otp);
+      
+      await pool.execute('DELETE FROM password_resets WHERE user_id = ?', [users[0].user_id]);
+      await pool.execute(
+        `INSERT INTO password_resets (user_id, otp_hash, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL ${CODE_MINUTES} MINUTE))`,
+        [users[0].user_id, otpHash]
+      );
+      
+      console.log(`[FORGOT PASSWORD OTP] Code for ${email}: ${otp}`);
+      
+      await sendMail(
+        email,
+        'Your UniConnect password reset code',
+        `Your OTP is ${otp}. It works once and expires in ${CODE_MINUTES} minutes.`
+      );
+    }
+
+    res.json({ message: 'If this email is registered, an OTP has been sent' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/reset-password', upload.none(), async (req, res, next) => {
+  try {
+    const email = text(req.body && req.body.email).toLowerCase();
+    const otp = text(req.body && req.body.otp);
+    const { newPassword, confirmPassword } = req.body || {};
+
+    if (!isEmail(email) || !/^\d{6}$/.test(otp)) {
+      throw new HttpError(400, 'Enter the 6-digit OTP from your email');
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      throw new HttpError(400, 'Password must be 8-72 characters with an upper-case letter, a lower-case letter and a digit');
+    }
+
+    if (newPassword !== confirmPassword) {
+      throw new HttpError(400, 'The two passwords do not match');
+    }
+
+    const [rows] = await pool.execute(
+      `SELECT u.user_id, r.otp_hash, r.attempts 
+       FROM password_resets r 
+       JOIN users u ON u.user_id = r.user_id 
+       WHERE u.email = ? AND r.expires_at > NOW()`,
+      [email]
+    );
+
+    const invalid = new HttpError(400, 'The OTP is wrong or has expired');
+
+    if (rows.length === 0 || rows[0].attempts >= MAX_CODE_ATTEMPTS) {
+      throw invalid;
+    }
+
+    if (!(await checkCode(otp, rows[0].otp_hash))) {
+      await pool.execute('UPDATE password_resets SET attempts = attempts + 1 WHERE user_id = ?', [rows[0].user_id]);
+      throw invalid;
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+    await pool.execute(
+      'UPDATE users SET password_hash = ?, failed_attempts = 0, locked_until = NULL WHERE user_id = ?',
+      [passwordHash, rows[0].user_id]
+    );
+
+    await pool.execute('DELETE FROM password_resets WHERE user_id = ?', [rows[0].user_id]); 
+
+    await writeAudit(rows[0].user_id, 'PASSWORD_RESET', email, null);
+
+    res.json({ message: 'Your password has been changed. You can log in now' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
