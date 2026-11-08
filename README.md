@@ -10,7 +10,7 @@
 
 ---
 
-## ✨ Phase 1 Features (Completed - ~20%)
+## ✨ Phase 1 Features 
 * **Two-Stage Sign-Up Flow:**
   * Rule-based verification for Students and Faculty against official admission records.
   * Mandatory ID card photo upload (JPG/PNG, max 2MB) with image signature validation.
