@@ -257,7 +257,7 @@ router.post('/signup/complete', upload.none(), async (req, res, next) => {
 });
 
 // Login (locks the account for 15 minutes after 5 wrong passwords)
-router.post('/login', upload.none(), async (req, res, next) => {
+router.post('/login', async (req, res, next) => {
   try {
     const email = text(req.body && req.body.email).toLowerCase();
     const password = req.body && typeof req.body.password === 'string' ? req.body.password : '';
