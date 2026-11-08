@@ -6,6 +6,8 @@ export class ApiError extends Error {
   }
 }
 
+const API_BASE_URL = 'https://uniconnect-ur0m.onrender.com/api';
+
 export async function api(path, { method = 'GET', body, formData, token } = {}) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -18,9 +20,11 @@ export async function api(path, { method = 'GET', body, formData, token } = {}) 
     payload = JSON.stringify(body);
   }
 
+  const url = `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+
   let response;
   try {
-    response = await fetch(`/api${path}`, { method, headers, body: payload });
+    response = await fetch(url, { method, headers, body: payload });
   } catch (err) {
     throw new Error('Cannot reach the server. Check your internet connection.');
   }
