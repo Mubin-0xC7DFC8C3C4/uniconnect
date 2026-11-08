@@ -2,6 +2,7 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const publicRoutes = require('./routes/public');
 
 const app = express();
 
@@ -14,6 +15,8 @@ app.use(express.json({ limit: '100kb' }));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+app.use('/api/public', publicRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
