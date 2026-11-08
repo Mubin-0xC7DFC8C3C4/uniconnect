@@ -2,7 +2,7 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const publicRoutes = require('./routes/public');
+const metaRoutes = require('./routes/meta.routes');
 
 const app = express();
 
@@ -16,7 +16,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/public', publicRoutes);
+app.use('/api/meta', metaRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
