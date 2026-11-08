@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+const { requireAuth } = require('../middleware/auth');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
@@ -250,6 +252,54 @@ router.post('/signup/complete', upload.none(), async (req, res, next) => {
   } finally {
     conn.release();
   }
+});
+
+router.post('/login', upload.none(), async (req, res, next) => {
+  try {
+    const email = text(req.body && req.body.email).toLowerCase();
+    const password = req.body && typeof req.body.password === 'string' ? req.body.password : '';
+
+    if (!isEmail(email) || password === '') {
+      throw new HttpError(400, 'Enter your email and password');
+    }
+
+    const [rows] = await pool.execute(
+      'SELECT user_id, email, password_hash, role, status FROM users WHERE email = ?',
+      [email]
+    );
+
+    if (rows.length === 0) {
+      throw new HttpError(401, 'Incorrect email or password');
+    }
+
+    const user = rows[0];
+
+    if (user.status !== 'active') {
+      throw new HttpError(403, 'This account is not active');
+    }
+
+    const passwordOk = await bcrypt.compare(password, user.password_hash);
+    if (!passwordOk) {
+      throw new HttpError(401, 'Incorrect email or password');
+    }
+
+    const token = jwt.sign(
+      { userId: user.user_id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '2h' }
+    );
+
+    res.json({
+      token,
+      user: { id: user.user_id, email: user.email, role: user.role }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/me', requireAuth, (req, res) => {
+  res.json({ user: req.user });
 });
 
 module.exports = router;
