@@ -23,6 +23,8 @@ const BCRYPT_ROUNDS = 10; // bcrypt rounds for password hashing
 const MAX_CODE_ATTEMPTS = 5; 
 const router = express.Router();
 const CODE_MINUTES = 10; // verification codes and OTPs expire after 10 minutes
+const MAX_FAILED_LOGINS = 5;
+const LOCK_MINUTES = 15;
 
 router.use(
   rateLimit({
@@ -254,6 +256,7 @@ router.post('/signup/complete', upload.none(), async (req, res, next) => {
   }
 });
 
+// Login (locks the account for 15 minutes after 5 wrong passwords)
 router.post('/login', upload.none(), async (req, res, next) => {
   try {
     const email = text(req.body && req.body.email).toLowerCase();
@@ -264,7 +267,9 @@ router.post('/login', upload.none(), async (req, res, next) => {
     }
 
     const [rows] = await pool.execute(
-      'SELECT user_id, email, password_hash, role, status FROM users WHERE email = ?',
+      `SELECT user_id, email, password_hash, role, status, failed_attempts, 
+              (locked_until IS NOT NULL AND locked_until > NOW()) AS is_locked 
+       FROM users WHERE email = ?`,
       [email]
     );
 
@@ -274,14 +279,30 @@ router.post('/login', upload.none(), async (req, res, next) => {
 
     const user = rows[0];
 
+    if (user.is_locked) {
+      throw new HttpError(429, `Too many failed attempts. Try again in ${LOCK_MINUTES} minutes`);
+    }
+
     if (user.status !== 'active') {
       throw new HttpError(403, 'This account is not active');
     }
 
     const passwordOk = await bcrypt.compare(password, user.password_hash);
     if (!passwordOk) {
+      const failed = user.failed_attempts + 1;
+      if (failed >= MAX_FAILED_LOGINS) {
+        await pool.execute(
+          `UPDATE users SET failed_attempts = 0, locked_until = DATE_ADD(NOW(), INTERVAL ${LOCK_MINUTES} MINUTE) WHERE user_id = ?`,
+          [user.user_id]
+        );
+        await writeAudit(user.user_id, 'ACCOUNT_LOCKED', email, `${MAX_FAILED_LOGINS} wrong passwords`);
+      } else {
+        await pool.execute('UPDATE users SET failed_attempts = ? WHERE user_id = ?', [failed, user.user_id]);
+      }
       throw new HttpError(401, 'Incorrect email or password');
     }
+
+    await pool.execute('UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE user_id = ?', [user.user_id]);
 
     const token = jwt.sign(
       { userId: user.user_id, role: user.role },
@@ -296,10 +317,6 @@ router.post('/login', upload.none(), async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
-
-router.get('/me', requireAuth, (req, res) => {
-  res.json({ user: req.user });
 });
 
 module.exports = router;
