@@ -1,20 +1,24 @@
+const bcrypt = require('bcrypt');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const pool = require('../config/db');
 const HttpError = require('../utils/httperror');
 const { writeAudit } = require('../utils/audit');
 const { sendMail } = require('../utils/mailer');
-const { generateCode, hashCode } = require('../utils/otp');
+const { generateCode, hashCode, checkCode } = require('../utils/otp');
 const {
   POSITIONS,
   isEmail,
   isPhone,
   isValidDate,
   isPositiveInt,
+  isStrongPassword,
   normalizeText,
 } = require('../utils/validators');
 const { upload, hasImageSignature, removeFile, removeStoredFile } = require('../middleware/upload');
 
+const BCRYPT_ROUNDS = 10; // bcrypt rounds for password hashing
+const MAX_CODE_ATTEMPTS = 5; 
 const router = express.Router();
 const CODE_MINUTES = 10; // verification codes and OTPs expire after 10 minutes
 
@@ -129,6 +133,122 @@ router.post('/signup/start', upload.single('idCard'), async (req, res, next) => 
     res.json({ message: 'We sent a verification code to your email' });
   } catch (err) {
     next(err);
+  }
+});
+
+router.post('/signup/complete', upload.none(), async (req, res, next) => {
+  const conn = await pool.getConnection();
+  try {
+    const email = text(req.body && req.body.email).toLowerCase();
+    const code = text(req.body && req.body.code);
+    const { password, confirmPassword } = req.body || {};
+
+    if (!isEmail(email) || !/^\d{6}$/.test(code)) {
+      throw new HttpError(400, 'Enter the 6-digit code from your email');
+    }
+
+    if (!isStrongPassword(password)) {
+      throw new HttpError(400, 'Password must be 8-72 characters with an upper-case letter, a lower-case letter and a digit');
+    }
+
+    if (password !== confirmPassword) {
+      throw new HttpError(400, 'The two passwords do not match');
+    }
+
+    const [requests] = await conn.execute(
+      'SELECT * FROM signup_requests WHERE email = ? AND code_expires_at > NOW()',
+      [email]
+    );
+
+    if (requests.length === 0) {
+      throw new HttpError(400, 'The code is wrong or has expired. Please sign up again');
+    }
+
+    const request = requests[0];
+
+    if (request.attempts >= MAX_CODE_ATTEMPTS) {
+      throw new HttpError(400, 'Too many wrong attempts. Please sign up again');
+    }
+
+    if (!(await checkCode(code, request.code_hash))) {
+      await conn.execute('UPDATE signup_requests SET attempts = attempts + 1 WHERE request_id = ?', [request.request_id]);
+      throw new HttpError(400, 'The code is wrong or has expired. Please sign up again');
+    }
+
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+    await conn.beginTransaction();
+    try {
+      const [records] = await conn.execute(
+        'SELECT * FROM verified_records WHERE record_id = ? FOR UPDATE',
+        [request.record_id]
+      );
+
+      if (records.length === 0 || records[0].is_used) {
+        throw new HttpError(409, 'This university record already has an account');
+      }
+
+      const record = records[0];
+
+      const [userResult] = await conn.execute(
+        "INSERT INTO users (email, password_hash, role, status) VALUES (?, ?, ?, 'active')",
+        [email, passwordHash, record.type]
+      );
+
+      if (record.type === 'student') {
+        await conn.execute(
+          `INSERT INTO students (user_id, record_id, id_no, full_name, phone, dob, dept_id, batch_id, section_id, id_card_path) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            userResult.insertId,
+            record.record_id,
+            record.id_no,
+            record.full_name,
+            request.phone,
+            record.dob,
+            record.dept_id,
+            record.batch_id,
+            record.section_id,
+            request.id_card_path
+          ]
+        );
+      } else {
+        await conn.execute(
+          `INSERT INTO teachers (user_id, record_id, id_no, full_name, phone, dob, dept_id, position, id_card_path) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            userResult.insertId,
+            record.record_id,
+            record.id_no,
+            record.full_name,
+            request.phone,
+            record.dob,
+            record.dept_id,
+            record.position,
+            request.id_card_path
+          ]
+        );
+      }
+
+      await conn.execute('UPDATE verified_records SET is_used = TRUE WHERE record_id = ?', [record.record_id]);
+      await conn.execute('DELETE FROM signup_requests WHERE request_id = ?', [request.request_id]);
+      
+      await writeAudit(userResult.insertId, 'SIGNUP_COMPLETED', `${record.type}:${record.id_no}`, null, conn);
+
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      if (err.code === 'ER_DUP_ENTRY') {
+        throw new HttpError(409, 'An account with this email already exists');
+      }
+      throw err;
+    }
+
+    res.status(201).json({ message: 'Your account is ready. You can log in now' });
+  } catch (err) {
+    next(err);
+  } finally {
+    conn.release();
   }
 });
 
