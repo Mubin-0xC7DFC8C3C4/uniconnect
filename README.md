@@ -2,7 +2,7 @@
 > University Management & Student Service Web Portal
 
 
-## 🛠️ Technology Stack
+## Technology Stack
 * **Frontend:** React (Vite) + Tailwind CSS
 * **Backend:** Node.js + Express.js
 * **Database:** MySQL
@@ -10,25 +10,25 @@
 
 ---
 
-## ✨ Phase 1 Features 
-* **Two-Stage Sign-Up Flow:**
+## Phase 1 Features 
+* **Sign-Up Flow:**
   * Rule-based verification for Students and Faculty against official admission records.
-  * Mandatory ID card photo upload (JPG/PNG, max 2MB) with image signature validation.
+  * Mandatory ID card photo upload (JPG/PNG, max 2MB) with image validation.
   * Emailed verification code (OTP) confirmation step.
 * **Authentication & Security:**
   * Secure login with JSON Web Tokens (JWT) and role-based access control.
   * Brute-force protection: 15-minute account lockout after 5 consecutive failed login attempts.
   * Forgot password flow with single-use OTP recovery.
-* **Role-Based Dashboards:**
+* **Dashboards:**
   * **Student Dashboard:** View personal academic profile, department, batch, and section details.
   * **Faculty Dashboard:** View academic rank, department, and teaching profile.
-  * **Super Admin Dashboard:** Full control over verified admission records and system audit logs.
+  * **Admin Dashboard:** Full control over verified admission records and system audit logs.
 * **Theme Support:** 
   * Built-in Light and Dark theme toggle using Tailwind CSS.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```text
 uniconnect/
 ├── client/                 # React (Vite) frontend application
@@ -51,10 +51,10 @@ uniconnect/
 
 ---
 
-## 🚀 How to Run Locally
+## How to Run Locally
 
 ### Prerequisites
-* Node.js (v18+ recommended)
+* Node.js 
 * MySQL Server running locally
 
 ### 1. Database Setup
@@ -68,12 +68,10 @@ SOURCE server/sql/seed.sql;
 Navigate to the server directory, configure environment variables, install dependencies, and start the development server:
 ```bash
 cd server
-cp .env.example .env   # Open .env and fill in your MySQL credentials & JWT secret
+cp .env   # Open .env and fill in your MySQL credentials & JWT secret
 npm install
-npm run create-admin   # Create your super admin user account
 npm run dev            # Starts server on http://localhost:4000
 ```
-> 💡 *Note: During development, verification codes and OTPs are printed directly in the server terminal.*
 
 ### 3. Client (Frontend) Setup
 Open a separate terminal window, navigate to the client directory, install dependencies, and start the Vite dev server:
@@ -85,7 +83,7 @@ npm run dev            # Opens app on http://localhost:5173
 
 ---
 
-## 🔮 Upcoming Phases
+## Upcoming Phases
 * Courses & Enrollment, Class Routine
 * Attendance Tracking & Faculty Management
 * Assignments, Submissions, Marks Entry & Results
