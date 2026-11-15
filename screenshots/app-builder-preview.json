@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Dashboard · UniConnect",
+      "hasCanvas": false,
+      "bodyTextLen": 10,
+      "bodyTextHash": "7ecf33a183dea436853c9985078dd2349bd02380d5eeae5957f4e0ad933a1665",
+      "bodyTextPrefix": "UniConnect",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Dashboard · UniConnect",
+      "hasCanvas": false,
+      "bodyTextLen": 485,
+      "bodyTextHash": "30d4f31c37dd8342fc797b042ed5f4713af8d59034f6291dc3ef90bd4ad7ebd3",
+      "bodyTextPrefix": "UniConnect The term, without the noise. A student workspace for ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

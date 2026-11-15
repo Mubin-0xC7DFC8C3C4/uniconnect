@@ -1,0 +1,157 @@
+/* design/tokens.css */
+:root {
+  --font-sans: "Inter Tight", Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Berkeley Mono", monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.3125rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 2.0625rem;
+  --text-3xl: 2.5625rem;
+  --text-4xl: 4rem;
+
+  --leading-hero: 1.02;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-body: 1.55;
+
+  --tracking-hero: -0.032em;
+  --tracking-head: -0.018em;
+  --tracking-body: 0;
+  --tracking-label: 0.08em;
+
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-head: 620;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-10: 6rem;
+  --space-12: 8rem;
+  --space-16: 12rem;
+
+  --bg: #FBFBF9;
+  --surface: #FFFFFF;
+  --surface-sunken: #F2F1ED;
+  --border: #E4E2DC;
+  --border-strong: #C8C5BC;
+  --text: #14140F;
+  --text-muted: #5B5951;
+  --text-faint: #8A877D;
+  --accent: #1B4D3E;
+  --accent-hover: #143A2E;
+  --accent-contrast: #FFFFFF;
+  --focus: #2F6FED;
+  --danger: #B3261E;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --border-hairline: 1px;
+
+  --shadow-1:
+    0 1px 2px rgb(20 20 15 / 0.05),
+    0 1px 1px rgb(20 20 15 / 0.04);
+
+  --shadow-2:
+    0 8px 24px rgb(20 20 15 / 0.08),
+    0 2px 6px rgb(20 20 15 / 0.05);
+
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --measure: 68ch;
+  --container: 1180px;
+  --gutter: var(--space-5);
+}
+
+/* System dark preference, unless the user explicitly chose light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E0E0C;
+    --surface: #171715;
+    --surface-sunken: #0A0A09;
+    --border: #262622;
+    --border-strong: #3A3A34;
+    --text: #F5F4F0;
+    --text-muted: #A9A69C;
+    --text-faint: #726F67;
+    --accent: #4FD1A5;
+    --accent-hover: #66E0B8;
+    --accent-contrast: #0E0E0C;
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* Explicit dark choice (manual toggle / saved preference).
+   Needed so dark works even when the OS is in light mode.
+   Values are identical to the media-query block above. */
+:root[data-theme="dark"] {
+  --bg: #0E0E0C;
+  --surface: #171715;
+  --surface-sunken: #0A0A09;
+  --border: #262622;
+  --border-strong: #3A3A34;
+  --text: #F5F4F0;
+  --text-muted: #A9A69C;
+  --text-faint: #726F67;
+  --accent: #4FD1A5;
+  --accent-hover: #66E0B8;
+  --accent-contrast: #0E0E0C;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* University campus photo for Dashboard (place file in public/university-bg.jpg) */
+  --dashboard-bg-image: url("/university-bg.jpg");
+  --dashboard-overlay-light: linear-gradient(180deg, rgb(251 251 249 / 0.76) 0%, rgb(251 251 249 / 0.92) 45%, rgb(251 251 249 / 0.97) 100%);
+  --dashboard-overlay-dark: linear-gradient(180deg, rgb(14 14 12 / 0.72) 0%, rgb(14 14 12 / 0.90) 45%, rgb(14 14 12 / 0.96) 100%);
+
+/*
+How to use:
+
+1. No raw values in components. If a value is needed,
+   add it here first with a comment explaining why.
+
+2. Section rhythm:
+   --space-12 desktop, --space-8 mobile.
+   Never in between.
+
+3. Only one element uses --text-4xl per page.
+
+4. Body capped at --measure.
+
+5. Borders before shadows.
+   --shadow-1 for hover lift.
+   --shadow-2 only floating.
+
+6. --accent for actions only.
+   Heading never accent.
+
+7. Focus always:
+   2px solid var(--focus), 2px offset.
+*/

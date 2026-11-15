@@ -1,0 +1,171 @@
+@import "tailwindcss";
+@import "../design/tokens.css";
+
+@theme inline {
+  --font-mono: ui-monospace, "SF Mono", "Berkeley Mono", monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--accent-contrast);
+  --color-focus: var(--focus);
+  --color-danger: var(--danger);
+}
+
+@utility type-xs {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+}
+@utility type-sm {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+@utility type-base {
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+}
+@utility type-lg {
+  font-size: var(--text-lg);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-head);
+}
+@utility type-xl {
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-head);
+  font-weight: var(--weight-head);
+}
+@utility type-2xl {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-head);
+  font-weight: var(--weight-head);
+}
+@utility type-3xl {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-hero);
+  font-weight: var(--weight-head);
+}
+@utility type-4xl {
+  font-size: var(--text-4xl);
+  line-height: var(--leading-hero);
+  letter-spacing: var(--tracking-hero);
+  font-weight: var(--weight-head);
+}
+@utility type-label {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+  color: var(--text-faint);
+}
+@utility r-sm {
+  border-radius: var(--radius-sm);
+}
+@utility r-md {
+  border-radius: var(--radius-md);
+}
+@utility r-lg {
+  border-radius: var(--radius-lg);
+}
+@utility r-pill {
+  border-radius: var(--radius-pill);
+}
+@utility shadow-lift {
+  box-shadow: var(--shadow-1);
+}
+@utility shadow-float {
+  box-shadow: var(--shadow-2);
+}
+@utility measure {
+  max-width: var(--measure);
+}
+@utility container-app {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+}
+@utility transition-ui {
+  transition-property: background-color, color, border-color, opacity, transform;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-out);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) {
+      color-scheme: dark;
+    }
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: var(--weight-body);
+    line-height: var(--leading-body);
+    letter-spacing: var(--tracking-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--text) 16%, transparent);
+  }
+}
+
+[data-sonner-toaster] {
+  --normal-bg: var(--surface);
+  --normal-text: var(--text);
+  --normal-border: var(--border);
+  font-family: var(--font-sans);
+}
+
+.dialog-overlay {
+  background: color-mix(in srgb, var(--text) 36%, transparent);
+}
+
+.dialog-panel {
+  animation: dialog-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-panel {
+    animation: none;
+  }
+}
