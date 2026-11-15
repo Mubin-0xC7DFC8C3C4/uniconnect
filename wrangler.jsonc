@@ -1,8 +1,10 @@
 {
   "name": "uniconnect",
+  "main": "./.output/server/index.mjs",
   "compatibility_date": "2026-11-16",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "directory": "./.vercel/output/static",
-    "not_found_handling": "single-page-application"
+    "directory": "./.output/public",
+    "binding": "ASSETS"
   }
 }
